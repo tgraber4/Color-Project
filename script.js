@@ -115,7 +115,7 @@ colorsInList.push(["purple", "red", "green", "blue", "orange", "pink", "brown"])
 
 
 
-var level = 3;
+var level = 1;
 
 var x;
 var y;
@@ -153,6 +153,12 @@ var makeColorLabel = function (inputColor) {
     ctx.fillStyle = inputColor;
     ctx.font = "35px Arial";
     ctx.fillText(inputColor, 255, 475);
+}
+
+var makeLevelLabel = function () {
+    ctx.fillStyle = "white";
+    ctx.font = "35px Arial";
+    ctx.fillText("Level " + level, 255, 105);
 }
 
 var placeColors = function () {
@@ -216,12 +222,9 @@ var checkColorEnds = function () {
 var levelone = function () {
     makeBackDrop1();
     makeColorLabel("purple")
+    makeLevelLabel()
     x = 230;
     y = 240;
-
-    ctx.fillStyle = "white";
-    ctx.font = "35px Arial";
-    ctx.fillText("Level " + level, 255, 105);
 
     color = "purple";
 
@@ -239,6 +242,7 @@ var levelone = function () {
 var leveltwo = function () {
     makeBackDrop1();
     makeColorLabel("purple")
+    makeLevelLabel()
     
     x = 230;
     y = 240;
@@ -257,6 +261,7 @@ var leveltwo = function () {
 var levelthree = function () {
     makeBackDrop1();
     makeColorLabel("purple")
+    makeLevelLabel()
 
     x = 230;
     y = 240;
@@ -275,6 +280,7 @@ var levelthree = function () {
 var levelfour = function () {
     makeBackDrop1();
     makeColorLabel("purple")
+    makeLevelLabel()
 
     x = 230;
     y = 240;
@@ -295,6 +301,7 @@ var levelfive = function () {
 var levelseven = function () {
     makeBackDrop2()
     makeColorLabel("purple")
+    makeLevelLabel()
 
     x = 370;
     y = 240;
@@ -330,6 +337,7 @@ var levelseven = function () {
 var leveleight = function () {
     makeBackDrop2()
     makeColorLabel("purple")
+    makeLevelLabel()
 
     x = 410;
     y = 280;
@@ -361,9 +369,8 @@ var leveleight = function () {
     placeColors();
 }
 
-// levelone();
+levelone();
 
-levelthree();
 
 
 
