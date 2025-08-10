@@ -73,11 +73,9 @@ class Color {
 
 /*
 To-Do List
-- add hidden path to level 7
-- test level 8
 
-- add home screen
 - add popup that the level has hidden pathes
+- explain hidden pathes
 
 */
 
@@ -120,7 +118,7 @@ var level = 1;
 var x;
 var y;
 var color;
-var teleportused;
+var teleportused = 0;
 var hiddenpathx;
 var hiddenpathy;
 var teleportpad1y;
@@ -128,8 +126,56 @@ var teleportpad1x;
 var teleportpad2x;
 var teleportpad2y;
 
+// Controls for home screen
+let pulseOpacity = 1;
+let pulseDirection = -0.02; 
+let showingHomeScreen = true;
+let showingControls = false;
+let isHoveringBtn = false;
+let controlsBtn = { x: 225, y: 400, w: 150, h: 50 };
 
-var gameboards = [];
+
+/**
+ * Draw a rounded rectangle on a canvas (uniform corner radius)
+ * @param {CanvasRenderingContext2D} ctx - The canvas 2D rendering context
+ * @param {number} x - The x-coordinate of the rectangle's top-left corner
+ * @param {number} y - The y-coordinate of the rectangle's top-left corner
+ * @param {number} width - The rectangle width
+ * @param {number} height - The rectangle height
+ * @param {number} radius - Corner radius
+ * @param {string} [fillColor] - Fill color (optional)
+ * @param {string} [strokeColor] - Stroke color (optional)
+ * @param {number} [lineWidth=1] - Stroke line width
+ */
+function drawRoundedRect(x, y, width, height, radius, fillColor, strokeColor, lineWidth = 1) {
+    ctx.beginPath();
+    ctx.moveTo(x + radius, y);
+    ctx.lineTo(x + width - radius, y);
+    ctx.quadraticCurveTo(x + width, y, x + width, y + radius);
+    ctx.lineTo(x + width, y + height - radius);
+    ctx.quadraticCurveTo(x + width, y + height, x + width - radius, y + height);
+    ctx.lineTo(x + radius, y + height);
+    ctx.quadraticCurveTo(x, y + height, x, y + height - radius);
+    ctx.lineTo(x, y + radius);
+    ctx.quadraticCurveTo(x, y, x + radius, y);
+    ctx.closePath();
+
+    if (fillColor) {
+        ctx.fillStyle = fillColor;
+        ctx.fill();
+    }
+    if (strokeColor) {
+        ctx.strokeStyle = strokeColor;
+        ctx.lineWidth = lineWidth;
+        ctx.stroke();
+    }
+}
+
+function capitalizeFirstLetter(str) {
+  if (!str) return ""; // handle empty string
+  return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
 
 var makeBackDrop1 = function () {
     ctx.fillStyle = "black";
@@ -149,16 +195,35 @@ var makeBackDrop2 = function () {
 
 }
 
+
+
 var makeColorLabel = function (inputColor) {
+    drawRoundedRect(210, 430, 180, 80, 12, "darkgrey", "grey", 4)
+    ctx.font = "25px Arial";
+    ctx.fillStyle = "black";
+    ctx.fillText("Current Color", 225, 464);
+    ctx.textAlign = "center";
+
     ctx.fillStyle = inputColor;
-    ctx.font = "35px Arial";
-    ctx.fillText(inputColor, 255, 475);
+    if (inputColor == "orange") {
+        ctx.shadowColor = 'rgba(54, 33, 6, 0.7)';
+    } else {
+        ctx.shadowColor = 'rgba(0,0,0,0.1)';
+    }
+    ctx.shadowBlur = 30;               
+    ctx.shadowOffsetX = 0;                
+    ctx.shadowOffsetY = 0;             
+
+    
+    ctx.fillRect(285, 475, 25, 25)
+    ctx.textAlign = "start";
+    ctx.shadowColor = "transparent"
 }
 
 var makeLevelLabel = function () {
     ctx.fillStyle = "white";
     ctx.font = "35px Arial";
-    ctx.fillText("Level " + level, 255, 105);
+    ctx.fillText("Level " + level, 245, 105);
 }
 
 var placeColors = function () {
@@ -201,6 +266,196 @@ var setUpLevel = function () {
 
 }
 
+
+
+// ------- Home Screen -------
+
+function drawHomeScreen() {
+    // Background gradient
+    let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, "#1a1a1a");
+    gradient.addColorStop(1, "#333333");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 600, 550);
+
+    ctx.textAlign = "center";
+
+    // Game Title
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+    ctx.shadowBlur = 8;
+    ctx.fillStyle = "#4CAF50";
+    ctx.font = "bold 56px Arial";
+    ctx.fillText("COLOR CONNECT", 300, 180);
+
+    // Subtitle
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "20px Arial";
+    ctx.fillText("Connect all the matching ends!", 300, 230);
+
+    // Pulsing "Click to Start"
+    pulseOpacity += pulseDirection;
+    if (pulseOpacity <= 0.3 || pulseOpacity >= 1) {
+        pulseDirection *= -1;
+    }
+    ctx.fillStyle = `rgba(255,255,255,${pulseOpacity})`;
+    ctx.font = "24px Arial";
+    ctx.fillText("Click to Start", 300, 300);
+
+    // Controls button with hover effect
+    ctx.fillStyle = isHoveringBtn ? "#66BB6A" : "#4CAF50";
+    
+    ctx.strokeStyle = "#2E7D32";
+    ctx.lineWidth = 3;
+    ctx.shadowColor = "rgba(0,0,0,0.5)";
+    ctx.shadowBlur = 5;
+    ctx.beginPath();
+    ctx.roundRect(controlsBtn.x, controlsBtn.y, controlsBtn.w, controlsBtn.h, 10);
+    ctx.fill();
+    ctx.stroke();
+
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#fff";
+    ctx.font = "20px Arial";
+    ctx.fillText("Controls", controlsBtn.x + controlsBtn.w / 2, controlsBtn.y + 32);
+}
+
+function drawControlsPopup() {
+    // Dim background
+    ctx.fillStyle = "rgba(0,0,0,0.8)";
+    ctx.fillRect(0, 0, 600, 550);
+
+    ctx.textAlign = "center";
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 28px Arial";
+    ctx.fillText("Controls", 300, 100);
+
+    ctx.font = "20px Arial";
+    ctx.textAlign = "left";
+    let startY = 160;
+    let lineHeight = 35;
+    let controlsList = [
+        ["Arrow Keys", "Move color"],
+        ["N", "Proceed to next level if completed"],
+        ["R", "Reset the current puzzle"],
+        ["Enter", "Switch colors"]
+    ];
+
+    controlsList.forEach(([key, action], i) => {
+        ctx.fillText(`${key}:`, 120, startY + i * lineHeight);
+        ctx.fillText(action, 250, startY + i * lineHeight);
+    });
+
+    ctx.textAlign = "center";
+    ctx.font = "18px Arial";
+    ctx.fillStyle = "#ccc";
+    ctx.fillText("Click anywhere to return", 300, 500);
+}
+
+function updateScreen() {
+    ctx.clearRect(0, 0, 600, 550);
+    if (showingHomeScreen && !showingControls) {
+        drawHomeScreen();
+    } else if (showingControls) {
+        drawControlsPopup();
+    }
+    if(showingHomeScreen) {
+      requestAnimationFrame(updateScreen);
+    }
+}
+
+function handleClick(e) {
+    const rect = canvas.getBoundingClientRect();
+    let mouseX = e.clientX - rect.left;
+    let mouseY = e.clientY - rect.top;
+
+    // Close controls popup on click if in Controls Page
+    if (showingControls) {
+        // Set cursor to Pointer if over button on switch to Home Screen
+        if (
+            mouseX >= controlsBtn.x && mouseX <= controlsBtn.x + controlsBtn.w &&
+            mouseY >= controlsBtn.y && mouseY <= controlsBtn.y + controlsBtn.h
+        ) {
+            canvas.style.cursor = "pointer"
+        }
+        showingControls = false;
+        return;
+    }
+
+    // Check if clicked controls button
+    if (
+        mouseX >= controlsBtn.x && mouseX <= controlsBtn.x + controlsBtn.w &&
+        mouseY >= controlsBtn.y && mouseY <= controlsBtn.y + controlsBtn.h
+    ) {
+        canvas.style.cursor = "default"
+        showingControls = true;
+        return;
+    }
+
+    // Otherwise start the game
+    startGame();
+}
+
+function handleMouseMove(e) {
+    if (!showingHomeScreen || showingControls) {
+        // On controls popup or game started, always default cursor
+        if (canvas.style.cursor !== "default") {
+            canvas.style.cursor = "default";
+        }
+        return;
+    }
+
+    const rect = canvas.getBoundingClientRect();
+    let mouseX = e.clientX - rect.left;
+    let mouseY = e.clientY - rect.top;
+
+    let hoveringNow = (
+        mouseX >= controlsBtn.x && mouseX <= controlsBtn.x + controlsBtn.w &&
+        mouseY >= controlsBtn.y && mouseY <= controlsBtn.y + controlsBtn.h
+    );
+
+    if (hoveringNow !== isHoveringBtn) {
+        isHoveringBtn = hoveringNow;
+        canvas.style.cursor = isHoveringBtn ? "pointer" : "default";
+        drawHomeScreen();
+    }
+}
+
+// ------- End of Home Screen -------
+
+
+
+// ------- Game Over Screen -------
+
+function drawGameOverScreen() {
+    // Background gradient
+    let gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+    gradient.addColorStop(0, "#1a1a1a");
+    gradient.addColorStop(1, "#333333");
+    ctx.fillStyle = gradient;
+    ctx.fillRect(0, 0, 600, 550);
+
+    // Shadow/glow for text
+    ctx.shadowColor = "rgba(0, 0, 0, 0.8)";
+    ctx.shadowBlur = 8;
+    ctx.textAlign = "center";
+
+    // Main "Game Over" text
+    ctx.fillStyle = "#FF4C4C";
+    ctx.font = "bold 64px Arial";
+    ctx.fillText("GAME OVER", 300, 250);
+
+    // Reset shadow for smaller text
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "24px Arial";
+    ctx.fillText("Thanks for playing!", 300, 300);
+}
+
+// ------- End of Game Over Screen -------
+
+
+
 /*
 checkColorEnds function
 - Checks if user is currently in an end color tile. If the user is, then updates the gotten property of 
@@ -217,7 +472,7 @@ var checkColorEnds = function () {
 
 
 
-// colorInfo["red"].updateCoords(startx, starty, endx, endy);
+
 
 var levelone = function () {
     makeBackDrop1();
@@ -228,6 +483,7 @@ var levelone = function () {
 
     color = "purple";
 
+    // template: colorInfo["red"].updateCoords(startx, starty, endx, endy);
     colorInfo["purple"].updateCoords(230, 240, 310, 300);
     colorInfo["red"].updateCoords(230, 320, 250, 240);
     colorInfo["green"].updateCoords(230, 360, 330, 360);
@@ -369,9 +625,38 @@ var leveleight = function () {
     placeColors();
 }
 
-levelone();
+function startGame() {
+    showingHomeScreen = false; // stop home screen loop
+    showingControls = false; // close controls if open
+
+    canvas.removeEventListener('click', handleClick);
+    canvas.removeEventListener('mousemove', handleMouseMove);
+
+    canvas.style.cursor = "default";
+
+    setTimeout(() => {
+        ctx.textAlign = "start";
+        console.log("test")
+        levelone()
+    }, 25);
+    
+
+}
 
 
+/*
+
+--------- Start ------------
+
+*/
+
+
+// Add listener once
+canvas.addEventListener('click', handleClick);
+canvas.addEventListener('mousemove', handleMouseMove);
+
+// Start animation loop
+updateScreen();
 
 
 
@@ -441,13 +726,12 @@ Ball.prototype.moving = function (guess) {
         ctx.fillStyle = color;
         ctx.fillRect(x, y, 20, 20);
 
+        
 
-        // change text display
+        // change color label
         ctx.fillStyle = "black";
-        ctx.fillRect(240, 440, 150, 50);
-        ctx.fillStyle = color;
-        ctx.font = "35px Arial";
-        ctx.fillText(color, 255, 475);
+        ctx.fillRect(200, 380, 250, 100);
+        makeColorLabel(color)
     } else if (guess ==="n") {
         var tempcounter = 0;
         for (var i = 0; i < colorsInList[level - 1].length; i++) {
@@ -457,7 +741,11 @@ Ball.prototype.moving = function (guess) {
         }
         if (tempcounter == colorsInList[level - 1].length) {
             level++;
-            setUpLevel();
+            if (level < 9) {
+                setUpLevel();
+            } else {
+                drawGameOverScreen();
+            }
         }
     } else if (guess ==="r") {
         ctx.clearRect(230, 240, 300, 230);
@@ -526,16 +814,19 @@ var checkMoveTileStatus = function (currx, curry, newx, newy) {
 var checkHiddenPathConditions = function () {
     console.log("test")
     if (hiddenpathy === y && hiddenpathx === x && level === 7) {
-        ctx.clearRect(250, 340, 120, 20);
+        ctx.fillStyle = "White"
+        ctx.fillRect(250, 340, 120, 20);
     }
     if (hiddenpathy === y && hiddenpathx === x && level === 8) {
-        ctx.clearRect(250, 300, 60, 20);
-        ctx.clearRect(290, 320, 80, 20);
+        ctx.fillStyle = "White"
+        ctx.fillRect(250, 300, 60, 20);
+        ctx.fillRect(290, 320, 80, 20);
     }
 }
 
 var checkExtraConditions = function (newx, newy) {
-    if (teleportpad1y === newy && teleportpad1x === newx) {
+    if (teleportpad1y === newy && teleportpad1x === newx && teleportused == 0) {
+        ctx.fillStyle = color;
         ctx.fillRect(newx, newy, 20, 20);
         x = teleportpad2x;
         y = teleportpad2y;
